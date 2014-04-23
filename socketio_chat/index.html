@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+<head><title></title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="/css/bootstrap.min.css" rel="stylesheet" media="screen">
+<link href="/css/bootstrap-responsive.min.css" rel="stylesheet">
+<script src="/socket.io/socket.io.js"></script>
+<!-- Bootstrap -->
+<script src="/js/bootstrap.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script>
+	var socket = io.connect('http://172.16.9.32:8080');
+
+	// on connection to server, ask for user's name with an anonymous callback
+	socket.on('connect', function(){
+		// call the server-side function 'adduser' and send one parameter (value of prompt)
+		socket.emit('adduser', prompt("What's your name?"));
+	});
+
+	// listener, whenever the server emits 'updatechat', this updates the chat body
+	socket.on('updatechat', function (username, data) {
+		$('#conversation').append('<b>'+username + ':</b> ' + data + '<br>');
+		
+		// scroll position
+		$('#conversation').scrollTop($('#conversation')[0].scrollHeight);
+	});
+
+	// listener, whenever the server emits 'updateusers', this updates the username list
+	socket.on('updateusers', function(data) {
+		$('#users').empty();
+		$.each(data, function(key, value) {
+			//<li><i class="icon-search icon-user"></i></li>
+			$('#users').append('<li><i class="icon-search icon-user"></i>&nbsp;' + key + '</li>');
+		});
+	});
+
+	// on load of page
+	$(function(){
+		// when the client clicks SEND
+		$('#datasend').click( function() {
+			var message = $('#data').val();
+			$('#data').val('');
+			$('#data').focus();
+			// tell server to execute 'sendchat' and send along one parameter
+			socket.emit('sendchat', message);
+		});
+
+		// when the client hits ENTER on their keyboard
+		$('#data').keypress(function(e) {
+			if(e.which == 13) {
+				$(this).blur();
+				$('#datasend').focus().click();
+			}
+		});
+	});
+
+</script>
+</head>
+<body style="margin:0">
+<div class="navbar navbar-inverse navbar-fixed-top" style="display:none;">
+    <div class="navbar-inner">
+        <div class="container">
+			<a class="brand" href="./index.html">Chat Chat Chat</a>
+			<div class="nav-collapse collapse">
+				<ul class="nav">
+					<li class="">
+						<a href="./customize.html">Menu1</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+    </div>
+</div>
+<div class="span4">
+			<div style="width:400px; height:400px; overflow-y:scroll;" id="conversation">
+			</div>
+			<div class="input-append">
+				<input class="span4" id="data" type="text" />
+				<button class="btn" id="datasend" type="button">Send</button>
+			</div>
+		</div>
+<div class="container" style="padding-top:55px;" style="display:none;">
+	<div class="row">
+		<div class="span3 bs-docs-sidebar">
+			<strong>접속자</strong>
+			 <ul class="unstyled" id="users">
+			 </ul>
+		</div>
+		
+		<div class="span4">
+			<div style="width:400px; height:400px; overflow-y:scroll;" id="conversation">
+			</div>
+			<div class="input-append">
+				<input class="span4" id="data" type="text" />
+				<button class="btn" id="datasend" type="button">Send</button>
+			</div>
+		</div>
+	</div>
+	
+</div>
+</body>
+</html>
